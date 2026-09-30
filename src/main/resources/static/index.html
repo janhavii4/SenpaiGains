@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SenpaiGains — Dashboard</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="navbar">
+    <a href="index.html" class="active">🏠 Dashboard</a>
+    <a href="training.html">⚔️ Training</a>
+    <a href="fuel.html">🍜 Fuel</a>
+</div>
+
+<div class="hero">
+    <h1>SENPAI GAINS</h1>
+    <div class="mascot-mark">
+        <svg width="70" height="70" viewBox="0 0 100 100">
+            <path d="M50 10 C75 10 90 30 90 50 C90 70 75 85 55 85 C40 85 30 75 30 62 C30 52 38 45 47 45 C53 45 58 49 58 55"
+                  fill="none" stroke="url(#grad)" stroke-width="7" stroke-linecap="round"/>
+            <defs>
+                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff7a1a"/>
+                    <stop offset="100%" stop-color="#ff4f9a"/>
+                </linearGradient>
+            </defs>
+        </svg>
+    </div>
+    <p class="tagline">Every senpai was once a kouhai. Log your arc. ⚔️</p>
+</div>
+
+<div class="stat-bar">
+    <div class="avatar">🥷</div>
+    <div class="stat-info">
+        <div class="level" id="level-text">LV. 1 — ROOKIE</div>
+        <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+    </div>
+    <div class="mini-stats">
+        <div class="mini-stat"><div class="num" id="stat-workouts">0</div><div class="lbl">Sessions</div></div>
+        <div class="mini-stat"><div class="num" id="stat-calories">0</div><div class="lbl">Calories</div></div>
+    </div>
+</div>
+
+<div class="container" style="grid-template-columns: 1fr;">
+    <div class="panel">
+        <h2>📜 Recent Activity</h2>
+        <div id="recent-list"></div>
+    </div>
+</div>
+
+<script>
+    const API = "http://localhost:8080/api";
+
+    async function loadDashboard() {
+        const [wRes, dRes] = await Promise.all([fetch(`${API}/workouts`), fetch(`${API}/diet`)]);
+        const workouts = await wRes.json();
+        const diet = await dRes.json();
+
+        const level = Math.floor(workouts.length / 3) + 1;
+        const xpInLevel = (workouts.length % 3) / 3 * 100;
+        document.getElementById("level-text").innerText =
+            `LV. ${level} — ${level < 3 ? "ROOKIE" : level < 6 ? "TRAINEE" : "SENPAI"}`;
+        document.getElementById("xp-fill").style.width = xpInLevel + "%";
+        document.getElementById("stat-workouts").innerText = workouts.length;
+        document.getElementById("stat-calories").innerText = diet.reduce((s, d) => s + d.calories, 0);
+
+        const combined = [
+            ...workouts.map(w => ({ type: "Training", text: `${w.exerciseName} — ${w.sets}x${w.reps} @ ${w.weight}kg`, date: w.date })),
+            ...diet.map(d => ({ type: "Fuel", text: `${d.mealName} — ${d.calories}cal`, date: d.date }))
+        ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+
+        const list = document.getElementById("recent-list");
+        list.innerHTML = combined.length ? "" : `<div class="empty">No activity yet — start logging, senpai!</div>`;
+        combined.forEach((item, i) => {
+            const div = document.createElement("div");
+            div.className = "entry";
+            div.style.animationDelay = (i * 0.05) + "s";
+            div.innerHTML = `<span>[${item.type}] ${item.text} <br><small>${item.date}</small></span>`;
+            list.appendChild(div);
+        });
+    }
+
+    loadDashboard();
+</script>
+
+</body>
+</html>

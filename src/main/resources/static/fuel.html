@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SenpaiGains — Fuel</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="navbar">
+    <a href="index.html">🏠 Dashboard</a>
+    <a href="training.html">⚔️ Training</a>
+    <a href="fuel.html" class="active">🍜 Fuel</a>
+</div>
+
+<div class="hero">
+    <h1>FUEL RESERVES</h1>
+    <div class="mascot-mark">
+        <svg width="70" height="70" viewBox="0 0 100 100">
+            <path d="M50 10 C75 10 90 30 90 50 C90 70 75 85 55 85 C40 85 30 75 30 62 C30 52 38 45 47 45 C53 45 58 49 58 55"
+                  fill="none" stroke="url(#grad3)" stroke-width="7" stroke-linecap="round"/>
+            <defs>
+                <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff7a1a"/>
+                    <stop offset="100%" stop-color="#ff4f9a"/>
+                </linearGradient>
+            </defs>
+        </svg>
+    </div>
+    <p class="tagline">Even the strongest senpai needs to eat 🍜</p>
+</div>
+
+<div class="container" style="grid-template-columns: 1fr;">
+    <div class="panel diet-panel">
+        <h2>+ Log New Meal</h2>
+        <div class="form-grid">
+            <input id="d-name" placeholder="Meal name">
+            <input id="d-cal" type="number" placeholder="Calories">
+            <input id="d-protein" type="number" placeholder="Protein (g)">
+            <input id="d-date" type="date">
+        </div>
+        <button onclick="addDiet()">+ LOG FUEL</button>
+    </div>
+
+    <div class="panel diet-panel">
+        <h2>🍜 Fuel History</h2>
+        <div id="diet-list" class="entry-list"></div>
+    </div>
+</div>
+
+<script>
+    const API = "http://localhost:8080/api";
+
+    async function loadDiet() {
+        const res = await fetch(`${API}/diet`);
+        const data = await res.json();
+        const list = document.getElementById("diet-list");
+        list.innerHTML = data.length ? "" : `<div class="empty">No fuel logged yet — go eat something, senpai!</div>`;
+        data.forEach((d, i) => {
+            const div = document.createElement("div");
+            div.className = "entry";
+            div.style.animationDelay = (i * 0.05) + "s";
+            div.innerHTML = `
+      <span>${d.mealName} — ${d.calories}cal, ${d.protein}g protein <br><small>${d.date}</small></span>
+      <button class="delete-btn" onclick="deleteDiet(${d.id})">✕</button>`;
+            list.appendChild(div);
+        });
+    }
+
+    async function addDiet() {
+        const body = {
+            mealName: document.getElementById("d-name").value,
+            calories: Number(document.getElementById("d-cal").value),
+            protein: Number(document.getElementById("d-protein").value),
+            date: document.getElementById("d-date").value
+        };
+        await fetch(`${API}/diet`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+        loadDiet();
+    }
+
+    async function deleteDiet(id) {
+        await fetch(`${API}/diet/${id}`, { method: "DELETE" });
+        loadDiet();
+    }
+
+    loadDiet();
+</script>
+
+</body>
+</html>

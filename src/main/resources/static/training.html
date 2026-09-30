@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SenpaiGains — Training</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="navbar">
+    <a href="index.html">🏠 Dashboard</a>
+    <a href="training.html" class="active">⚔️ Training</a>
+    <a href="fuel.html">🍜 Fuel</a>
+</div>
+
+<div class="hero">
+    <h1>TRAINING ARC</h1>
+    <div class="mascot-mark">
+        <svg width="70" height="70" viewBox="0 0 100 100">
+            <path d="M50 10 C75 10 90 30 90 50 C90 70 75 85 55 85 C40 85 30 75 30 62 C30 52 38 45 47 45 C53 45 58 49 58 55"
+                  fill="none" stroke="url(#grad2)" stroke-width="7" stroke-linecap="round"/>
+            <defs>
+                <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff7a1a"/>
+                    <stop offset="100%" stop-color="#ff4f9a"/>
+                </linearGradient>
+            </defs>
+        </svg>
+    </div>
+    <p class="tagline">No pain, no gain, no glow-up ⚔️</p>
+</div>
+
+<div class="container" style="grid-template-columns: 1fr;">
+    <div class="panel">
+        <h2>+ Log New Session</h2>
+        <div class="form-grid">
+            <input id="w-name" placeholder="Exercise name">
+            <input id="w-sets" type="number" placeholder="Sets">
+            <input id="w-reps" type="number" placeholder="Reps">
+            <input id="w-weight" type="number" placeholder="Weight (kg)">
+            <input id="w-date" type="date">
+        </div>
+        <button onclick="addWorkout()">+ LOG TRAINING</button>
+    </div>
+
+    <div class="panel">
+        <h2>⚔️ Training History</h2>
+        <div id="workout-list" class="entry-list"></div>
+    </div>
+</div>
+
+<script>
+    const API = "http://localhost:8080/api";
+
+    async function loadWorkouts() {
+        const res = await fetch(`${API}/workouts`);
+        const data = await res.json();
+        const list = document.getElementById("workout-list");
+        list.innerHTML = data.length ? "" : `<div class="empty">No training logged yet — start your arc!</div>`;
+        data.forEach((w, i) => {
+            const div = document.createElement("div");
+            div.className = "entry";
+            div.style.animationDelay = (i * 0.05) + "s";
+            div.innerHTML = `
+      <span>${w.exerciseName} — ${w.sets}x${w.reps} @ ${w.weight}kg <br><small>${w.date}</small></span>
+      <button class="delete-btn" onclick="deleteWorkout(${w.id})">✕</button>`;
+            list.appendChild(div);
+        });
+    }
+
+    async function addWorkout() {
+        const body = {
+            exerciseName: document.getElementById("w-name").value,
+            sets: Number(document.getElementById("w-sets").value),
+            reps: Number(document.getElementById("w-reps").value),
+            weight: Number(document.getElementById("w-weight").value),
+            date: document.getElementById("w-date").value
+        };
+        await fetch(`${API}/workouts`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body)
+        });
+        loadWorkouts();
+    }
+
+    async function deleteWorkout(id) {
+        await fetch(`${API}/workouts/${id}`, { method: "DELETE" });
+        loadWorkouts();
+    }
+
+    loadWorkouts();
+</script>
+
+</body>
+</html>
